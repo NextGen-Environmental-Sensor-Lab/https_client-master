@@ -41,11 +41,6 @@
 #define HTTP_POST_COMMANDS "{\"command\":\"appendRow\",\"sheet_name\":\"Sheet1\",\"values\":\""
 #define HTTP_POST_COMMANDS_END "\"}"
 
-// #define HTTP_HEAD		\
-				// "HEAD / HTTP/1.1\r\n"	\
-				// "Host: " CONFIG_HTTPS_HOSTNAME ":" HTTPS_PORT "\r\n"		\
-				// "Connection: close\r\n\r\n"
-
 #define HTTP_GET_LEN (sizeof(HTTP_GET) - 1)
 #define HTTP_GET_END "\r\n\r\n"
 
@@ -75,7 +70,6 @@ BUILD_ASSERT(sizeof(cert) < KB(4), "Certificate too large");
 int cert_provision(void)
 {
 	int err;
-
 	printk("Provisioning certificate\n");
 
 #if CONFIG_MODEM_KEY_MGMT
@@ -93,7 +87,6 @@ int cert_provision(void)
 		printk("Failed to check for certificates err %d\n", err);
 		return err;
 	}
-
 	if (exists)
 	{
 		mismatch = modem_key_mgmt_cmp(TLS_SEC_TAG, MODEM_KEY_MGMT_CRED_TYPE_CA_CHAIN, cert,
@@ -103,7 +96,6 @@ int cert_provision(void)
 			printk("Certificate match\n");
 			return 0;
 		}
-
 		printk("Certificate mismatch\n");
 		err = modem_key_mgmt_delete(TLS_SEC_TAG, MODEM_KEY_MGMT_CRED_TYPE_CA_CHAIN);
 		if (err)
@@ -113,7 +105,6 @@ int cert_provision(void)
 	}
 
 	printk("Provisioning certificate to the modem\n");
-
 	/*  Provision certificate to the modem */
 	err = modem_key_mgmt_write(TLS_SEC_TAG, MODEM_KEY_MGMT_CRED_TYPE_CA_CHAIN, cert,
 							   sizeof(cert));
@@ -146,7 +137,6 @@ int tls_setup(int fd)
 {
 	int err;
 	int verify;
-
 	/* Security tag that we have provisioned the certificate with */
 	const sec_tag_t tls_sec_tag[] = {
 		TLS_SEC_TAG,
@@ -224,18 +214,17 @@ static void build_http_request(void)
 	strcpy(send_buf, HTTP_POST);
 
 	// function to put data string in data_buf
-
-	int httpPayloadLen = strlen(HTTP_POST_COMMANDS)+ strlen(data_buf) + strlen(HTTP_POST_COMMANDS_END);
+	int httpPayloadLen = strlen(HTTP_POST_COMMANDS) + strlen(data_buf) + strlen(HTTP_POST_COMMANDS_END);
 
 	char temp[16];
 	sprintf(temp, "%u", httpPayloadLen); // converts the number to string
 	strcat(send_buf, temp);
 	strcat(send_buf, "\r\nConnection: close\r\n\r\n");
 	strcat(send_buf, HTTP_POST_COMMANDS);
-	strcat(send_buf,data_buf);
-	strcat(send_buf,HTTP_POST_COMMANDS_END);
+	strcat(send_buf, data_buf);
+	strcat(send_buf, HTTP_POST_COMMANDS_END);
 
-	//char httpPayload[] = "{\"command\":\"appendRow\",\"sheet_name\":\"Sheet1\",\"values\":\"1,2,3,4,nrf9160\"}";
+	// char httpPayload[] = "{\"command\":\"appendRow\",\"sheet_name\":\"Sheet1\",\"values\":\"1,2,3,4,nrf9160\"}";
 
 	httpPostLen = strlen(send_buf);
 
@@ -246,7 +235,7 @@ static void send_http_request(void)
 {
 	int err;
 	int fd;
-	char *p;
+	//char *p;
 	int bytes;
 	size_t off;
 	struct addrinfo *res;
@@ -323,9 +312,9 @@ static void send_http_request(void)
 			printk("recv() failed, err %d\n", errno);
 			goto clean_up;
 		}
-		//printf("%.*s...",bytes,&recv_buf[off]);
+		// printf("%.*s...",bytes,&recv_buf[off]);
 		off += bytes;
-	} while (bytes != 0 ); /* peer closed connection */
+	} while (bytes != 0); /* peer closed connection */
 
 	// printk("Received %d bytes\n", off);
 	printf("Received %d bytes\n", off);
@@ -340,18 +329,9 @@ static void send_http_request(void)
 		recv_buf[sizeof(recv_buf) - 1] = '\0';
 	}
 
-	/* Print HTTP response */
-	/* p = strstr(recv_buf, "\r\n");
-	if (p) {
-		off = p - recv_buf;
-		recv_buf[off + 1] = '\0';
-		printk("\n>\t %s\n\n", recv_buf);
-	}
-	*/
 	// printk("\n\n%s\n\n", recv_buf);
 	printf(">\n>\n%s>\n>\n", recv_buf);
 
-	// printk("Finished, closing socket.\n");
 	printf("Finished, closing socket.\n");
 
 clean_up:
@@ -362,7 +342,7 @@ clean_up:
 int main(void)
 {
 	int err;
-	strcat(data_buf,"11,22,33,44,55"); //dummy data
+	strcat(data_buf, "11,22,33,44,56"); // dummy data
 
 	printk("HTTPS client sample started\n\r");
 
@@ -372,7 +352,6 @@ int main(void)
 		printk("Failed to initialize modem library!\n");
 		return err;
 	}
-
 	err = cert_provision();
 	if (err)
 	{
@@ -389,7 +368,6 @@ int main(void)
 	}
 
 	k_sem_take(&network_connected_sem, K_FOREVER);
-	// printk("after net sem\n");
 
 	build_http_request();
 
